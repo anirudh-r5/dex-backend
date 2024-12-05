@@ -10,7 +10,7 @@ import "./StakeExecContract.sol";
  * @notice A contract that allow users to stack ETH
  */
 contract Staker {
-    // External contract that will old stacked funds
+    // External contract that will hold stacked funds
     StakeExecContract public stakeExecContract;
 
     // Balances of the user's stacked funds
@@ -57,7 +57,7 @@ contract Staker {
         stakeExecContract = StakeExecContract(stakeExecContractAddress);
     }
 
-    function execute() public stakeNotCompleted deadlineReached(false) {
+    function execute() public stakeNotCompleted deadlineReached(true) {
         uint256 contractBalance = address(this).balance;
 
         // check the contract has enough ETH to reach the treshold
