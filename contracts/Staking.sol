@@ -22,6 +22,9 @@ contract Staker {
     // Staking deadline
     uint256 public deadline = block.timestamp + 360 seconds;
 
+    //Raised funds
+    uint256 public raised = 0 ether;
+
     // Contract's Events
     event Stake(address indexed sender, uint256 amount);
 
@@ -77,7 +80,7 @@ contract Staker {
     function stake() public payable deadlineReached(false) stakeNotCompleted {
         // update the user's balance
         balances[msg.sender] += msg.value;
-
+        raised = address(this).balance;
         // emit the event to notify the blockchain that we have correctly Staked some fund for the user
         emit Stake(msg.sender, msg.value);
     }
