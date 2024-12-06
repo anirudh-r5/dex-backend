@@ -20,7 +20,7 @@ contract Staker {
     uint256 public constant threshold = 1 ether;
 
     // Staking deadline
-    uint256 public deadline = block.timestamp + 360 seconds;
+    uint256 public deadline;
 
     //Raised funds
     uint256 public raised = 0 ether;
@@ -58,6 +58,7 @@ contract Staker {
      */
     constructor(address stakeExecContractAddress) {
         stakeExecContract = StakeExecContract(stakeExecContractAddress);
+        deadline = block.timestamp + 60 minutes;
     }
 
     function execute() public stakeNotCompleted deadlineReached(true) {
