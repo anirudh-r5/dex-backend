@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-	"deploy": "npx hardhat ignition deploy ./ignition/modules/Staker.ts --network localhost --reset"
+    "stake": "npx hardhat ignition deploy ./ignition/modules/Staker.ts --network localhost --reset",
+	"nft": "npx hardhat ignition deploy ./ignition/modules/NFT.ts --network localhost --reset",
+    "usdt": "npx hardhat ignition deploy ./ignition/modules/USDTVendor.ts --network localhost --reset",
+    "usdc": "npx hardhat ignition deploy ./ignition/modules/USDCVendor.ts --network localhost --reset"
   },
   "author": "",
   "license": "ISC",
@@ -12,5 +15,10 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
     "hardhat": "^2.22.17"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0",
+    "axios": "^1.7.9",
+    "ethers": "^6.13.4"
   }
 }
