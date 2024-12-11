@@ -1,84 +1,49 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.8;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-// TO DO: Explain the reason/advantadge to use ERC721URIStorage instead of ERC721 itself
-contract NFT is ERC721URIStorage {
-    uint256 private _tokenIds;
+contract BasicNft is ERC721 {
+    uint256 private s_tokenCounter;
 
-    address private marketplaceAddress;
-    mapping(uint256 => address) private _creators;
-
-    event TokenMinted(
-        uint256 indexed tokenId,
-        string tokenURI,
-        address marketplaceAddress
-    );
-
-    constructor(
-        address _marketplaceAddress,
-        string memory nameNFT,
-        string memory symNFT
-    ) ERC721(nameNFT, symNFT) {
-        marketplaceAddress = _marketplaceAddress;
+    struct Item {
+        uint256 id;
+        address creator;
+        string uri; //metadata url
     }
 
-    function mintToken(string memory tokenURI) public returns (uint256) {
-        uint256 newItemId = _tokenIds++;
-        _mint(msg.sender, newItemId);
-        _creators[newItemId] = msg.sender;
-        _setTokenURI(newItemId, tokenURI);
+    mapping(uint256 => Item) public Items;
 
-        // Give the marketplace approval to transact NFTs between users
-        setApprovalForAll(marketplaceAddress, true);
-
-        emit TokenMinted(newItemId, tokenURI, marketplaceAddress);
-        return newItemId;
+    constructor() ERC721("SuperNFT", "SFT") {
+        s_tokenCounter = 0;
     }
 
-    function getTokensOwnedByMe() public view returns (uint256[] memory) {
-        uint256 numberOfExistingTokens = _tokenIds;
-        uint256 numberOfTokensOwned = balanceOf(msg.sender);
-        uint256[] memory ownedTokenIds = new uint256[](numberOfTokensOwned);
-
-        uint256 currentIndex = 0;
-        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
-            uint256 tokenId = i + 1;
-            if (ownerOf(tokenId) != msg.sender) continue;
-            ownedTokenIds[currentIndex] = tokenId;
-            currentIndex += 1;
-        }
-
-        return ownedTokenIds;
+    function mintNft(string memory turi) public {
+        _safeMint(msg.sender, s_tokenCounter);
+        Items[s_tokenCounter] = Item({
+            id: s_tokenCounter,
+            creator: msg.sender,
+            uri: turi
+        });
+        s_tokenCounter = s_tokenCounter + 1;
     }
 
-    function getTokenCreatorById(
+    function tokenURI(
         uint256 tokenId
-    ) public view returns (address) {
-        return _creators[tokenId];
+    ) public view override returns (string memory) {
+        ownerOf(tokenId);
+        return Items[tokenId].uri;
     }
 
-    function getTokensCreatedByMe() public view returns (uint256[] memory) {
-        uint256 numberOfExistingTokens = _tokenIds;
-        uint256 numberOfTokensCreated = 0;
+    function getTokenCounter() public view returns (uint256) {
+        return s_tokenCounter;
+    }
 
-        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
-            uint256 tokenId = i + 1;
-            if (_creators[tokenId] != msg.sender) continue;
-            numberOfTokensCreated += 1;
+    function getAll() public view returns (Item[] memory) {
+        Item[] memory ret = new Item[](s_tokenCounter);
+        for (uint i = 0; i < s_tokenCounter; i++) {
+            ret[i] = Items[i];
         }
-
-        uint256[] memory createdTokenIds = new uint256[](numberOfTokensCreated);
-        uint256 currentIndex = 0;
-        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
-            uint256 tokenId = i + 1;
-            if (_creators[tokenId] != msg.sender) continue;
-            createdTokenIds[currentIndex] = tokenId;
-            currentIndex += 1;
-        }
-
-        return createdTokenIds;
+        return ret;
     }
 }

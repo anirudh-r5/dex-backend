@@ -8,7 +8,7 @@ const USDCVendor = buildModule('USDCVendorModule', (m) => {
   const token = m.contract('Token', ['USD Coin', 'USDC'], {
     id: 'Token2',
   });
-  const usdcVending = m.contract('USDCVendor', [token]);
+  const usdcVending = m.contract('TokenVendor', [token, 3801]);
   m.call(token, 'transfer', [usdcVending, parseEther('1000')]);
 
   return { usdcVending };
