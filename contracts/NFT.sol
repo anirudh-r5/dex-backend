@@ -1,49 +1,80 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.8;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract BasicNft is ERC721 {
-    uint256 private s_tokenCounter;
+// TO DO: Explain the reason/advantadge to use ERC721URIStorage instead of ERC721 itself
+contract NFT is ERC721URIStorage {
+    uint256 private _tokenIds;
 
-    struct Item {
-        uint256 id;
-        address creator;
-        string uri; //metadata url
+    address private marketplaceAddress;
+    mapping(uint256 => address) private _creators;
+
+    event TokenMinted(
+        uint256 indexed tokenId,
+        string tokenURI,
+        address marketplaceAddress
+    );
+
+    constructor(address _marketplaceAddress) ERC721("SuperDEX", "SDX") {
+        marketplaceAddress = _marketplaceAddress;
     }
 
-    mapping(uint256 => Item) public Items;
+    function mintToken(string memory tokenURI) public returns (uint256) {
+        uint256 newItemId = _tokenIds++;
+        _mint(msg.sender, newItemId);
+        _creators[newItemId] = msg.sender;
+        _setTokenURI(newItemId, tokenURI);
 
-    constructor() ERC721("SuperNFT", "SFT") {
-        s_tokenCounter = 0;
+        // Give the marketplace approval to transact NFTs between users
+        setApprovalForAll(marketplaceAddress, true);
+
+        emit TokenMinted(newItemId, tokenURI, marketplaceAddress);
+        return newItemId;
     }
 
-    function mintNft(string memory turi) public {
-        _safeMint(msg.sender, s_tokenCounter);
-        Items[s_tokenCounter] = Item({
-            id: s_tokenCounter,
-            creator: msg.sender,
-            uri: turi
-        });
-        s_tokenCounter = s_tokenCounter + 1;
-    }
+    function getTokensOwnedByMe() public view returns (uint256[] memory) {
+        uint256 numberOfExistingTokens = _tokenIds;
+        uint256 numberOfTokensOwned = balanceOf(msg.sender);
+        uint256[] memory ownedTokenIds = new uint256[](numberOfTokensOwned);
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override returns (string memory) {
-        ownerOf(tokenId);
-        return Items[tokenId].uri;
-    }
-
-    function getTokenCounter() public view returns (uint256) {
-        return s_tokenCounter;
-    }
-
-    function getAll() public view returns (Item[] memory) {
-        Item[] memory ret = new Item[](s_tokenCounter);
-        for (uint i = 0; i < s_tokenCounter; i++) {
-            ret[i] = Items[i];
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
+            uint256 tokenId = i + 1;
+            if (ownerOf(tokenId) != msg.sender) continue;
+            ownedTokenIds[currentIndex] = tokenId;
+            currentIndex += 1;
         }
-        return ret;
+
+        return ownedTokenIds;
+    }
+
+    function getTokenCreatorById(
+        uint256 tokenId
+    ) public view returns (address) {
+        return _creators[tokenId];
+    }
+
+    function getTokensCreatedByMe() public view returns (uint256[] memory) {
+        uint256 numberOfExistingTokens = _tokenIds;
+        uint256 numberOfTokensCreated = 0;
+
+        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
+            uint256 tokenId = i + 1;
+            if (_creators[tokenId] != msg.sender) continue;
+            numberOfTokensCreated += 1;
+        }
+
+        uint256[] memory createdTokenIds = new uint256[](numberOfTokensCreated);
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < numberOfExistingTokens; i++) {
+            uint256 tokenId = i + 1;
+            if (_creators[tokenId] != msg.sender) continue;
+            createdTokenIds[currentIndex] = tokenId;
+            currentIndex += 1;
+        }
+
+        return createdTokenIds;
     }
 }
